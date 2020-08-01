@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+    stages {
+         stage('pullcode'){
+            steps{
+                git branch: 'dev', credentialsId: '70a54454-c8a3-43c1-ada0-91d4a79dd1a4', url: 'http://elb-791125809.cn-northwest-1.elb.amazonaws.com.cn:5335/xdata/SH2019GH080/front-end/ZheJNaturalResources.git'
+            }
+        }
+
+        stage('install') {
+            steps {
+                nodejs('nodejs'){
+                    sh 'yarn install'
+                }
+            }
+        }
+          stage('build'){
+            steps {
+                nodejs('nodejs'){
+                    sh 'yarn build'
+                }               
+            }
+        }
+        stage('tar') {
+          steps {
+            dir('dist'){
+              sh 'pwd'
+              sh 'tar -zcvf NatureResource.tar.gz *'
+            }
+          }
+        }
+
+        stage('play ansible') {
+            steps {
+                sh 'ansible-playbook /usr/local/playbooks/test.yml -e dir=E:/software/tomcat/webapps/ -e dir2=NatureResource -e dir3=/var/lib/jenkins/workspace/ansible-test/dist/'
+            }
+        }
+    }
+}
